@@ -15,9 +15,10 @@ lazy val scalatest = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings, releaseSettings, mimaSettings)
   .settings(
     moduleName := "discipline-scalatest",
+    resolvers += "sonatype" at "https://oss.sonatype.org/content/groups/public",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "discipline-core" % disciplineV,
-      "org.scalatestplus" %%% "scalacheck-1-14" % scalatestplusScalacheckV
+      "org.typelevel" %%% "discipline-core" % disciplineV withDottyCompat scalaVersion.value,
+      (if (isDotty.value) "com.sandinh" else "org.scalatestplus") %%% "scalacheck-1-14" % scalatestplusScalacheckV
     )
   )
   .jsSettings(scalaJSStage in Test := FastOptStage)
@@ -44,10 +45,10 @@ val scalatestplusScalacheckV = "3.1.1.1"
 
 // General Settings
 lazy val commonSettings = Seq(
-  organization := "org.typelevel",
+  organization := "com.sandinh",
   scalaVersion := "2.12.10",
-  crossScalaVersions := Seq("2.13.1", scalaVersion.value, "2.11.12"),
-  scalacOptions += "-Yrangepos",
+  crossScalaVersions := Seq("2.13.1", scalaVersion.value, "2.11.12", "0.23.0-RC1"),
+  scalacOptions ++= (if (isDotty.value) Nil else Seq("-Yrangepos")),
   scalacOptions in (Compile, doc) ++= Seq(
     "-groups",
     "-sourcepath",
@@ -76,13 +77,7 @@ lazy val releaseSettings = {
       releaseStepCommand("sonatypeReleaseAll"),
       pushChanges
     ),
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      if (isSnapshot.value)
-        Some("snapshots".at(nexus + "content/repositories/snapshots"))
-      else
-        Some("releases".at(nexus + "service/local/staging/deploy/maven2"))
-    },
+    publishTo := sonatypePublishToBundle.value,
     credentials ++= (
       for {
         username <- Option(System.getenv().get("SONATYPE_USERNAME"))
@@ -95,6 +90,7 @@ lazy val releaseSettings = {
       )
     ).toSeq,
     publishArtifact in Test := false,
+    sources in (Compile, doc) := Nil,
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseVcsSign := true,
     scmInfo := Some(

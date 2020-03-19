@@ -1,3 +1,4 @@
+addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.0")
 addSbtPlugin("com.dwijnand" % "sbt-travisci" % "1.2.0")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
 addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.1.11")
